@@ -23,6 +23,7 @@
     BOOL isUpdatingLocation;
     BOOL stopOnTerminate;
     BOOL alwaysUseLocationService;
+    BOOL fixedDistanceFilter;
 
     UIBackgroundTaskIdentifier bgTask;
     NSDate *lastBgTaskAt;
@@ -99,8 +100,8 @@
 - (void) configure:(CDVInvokedUrlCommand*)command
 {
     // Params.
-    //    0                    1               2                 3           4          5                  6                7               8                   14
-    //[stationaryRadius, distanceFilter, locationTimeout, desiredAccuracy, debug, notificationTitle, notificationText, activityType, stopOnTerminate, alwaysUseLocationService]
+    //    0                    1               2                 3           4          5                  6                7               8                   14                          15
+    //[stationaryRadius, distanceFilter, locationTimeout, desiredAccuracy, debug, notificationTitle, notificationText, activityType, stopOnTerminate, alwaysUseLocationService, fixedDistanceFilter]
 
     // UNUSED ANDROID VARS
     stationaryRadius    = [[command.arguments objectAtIndex: 0] intValue];
@@ -111,6 +112,7 @@
     activityType        = [self decodeActivityType:[command.arguments objectAtIndex:7]];
     stopOnTerminate     = [[command.arguments objectAtIndex: 8] boolValue];
     alwaysUseLocationService = [[command.arguments objectAtIndex: 14] boolValue];
+    fixedDistanceFilter = [[command.arguments objectAtIndex: 15] boolValue];
 
     self.syncCallbackId = command.callbackId;
 
@@ -478,18 +480,24 @@
             // We should have a good sample for speed now, power down our GPS as configured by user.
             isAcquiringSpeed = NO;
             [locationManager setDesiredAccuracy:desiredAccuracy];
-            [locationManager setDistanceFilter:[self calculateDistanceFilter:location.speed]];
+            if (fixedDistanceFilter) {
+                [locationManager setDistanceFilter:distanceFilter];
+            } else {
+                [locationManager setDistanceFilter:[self calculateDistanceFilter:location.speed]];
+            }
             [self startUpdatingLocation];
         } else {
             return;
         }
     } else if (isMoving) {
-        // Adjust distanceFilter incrementally based upon current speed
-        float newDistanceFilter = [self calculateDistanceFilter:location.speed];
-        if (newDistanceFilter != locationManager.distanceFilter) {
-            NSLog(@"- CDVBackgroundGeoLocation updated distanceFilter, new: %f, old: %f", newDistanceFilter, locationManager.distanceFilter);
-            [locationManager setDistanceFilter:newDistanceFilter];
-            [self startUpdatingLocation];
+        if (!fixedDistanceFilter) {
+            // Adjust distanceFilter incrementally based upon current speed
+            float newDistanceFilter = [self calculateDistanceFilter:location.speed];
+            if (newDistanceFilter != locationManager.distanceFilter) {
+                NSLog(@"- CDVBackgroundGeoLocation updated distanceFilter, new: %f, old: %f", newDistanceFilter, locationManager.distanceFilter);
+                [locationManager setDistanceFilter:newDistanceFilter];
+                [self startUpdatingLocation];
+            }
         }
     } else if ([self locationIsBeyondStationaryRegion:location]) {
         if (isDebugging) {

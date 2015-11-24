@@ -55,7 +55,8 @@ var backgroundGeoLocation = {
             //@Deprecated use locationTimeout instead
             interval              = (config.interval >= 0) ? config.interval : locationTimeout * 1000, // milliseconds
             fastestInterval       = (config.fastestInterval >= 0) ? config.fastestInterval  : 120000, // milliseconds
-            alwaysUseLocationService = config.alwaysUseLocationService || false;
+            alwaysUseLocationService = config.alwaysUseLocationService || false,
+            fixedDistanceFilter = config.fixedDistanceFilter || false;
 
 
         exec(success || function() {},
@@ -76,7 +77,8 @@ var backgroundGeoLocation = {
                 locationService,
                 interval,
                 fastestInterval,
-                alwaysUseLocationService
+                alwaysUseLocationService,
+                fixedDistanceFilter
             ]
         );
     },
