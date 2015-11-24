@@ -155,6 +155,7 @@ Parameter | Type | Platform     | Description
 `option.interval` | `Number` | Android | ANDROID_FUSED_LOCATION only. Rate in milliseconds at which your app prefers to receive location updates. @see [android docs](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest.html#getInterval())
 `option.fastestInterval` | `Number` | Android | ANDROID_FUSED_LOCATION only. Fastest rate in milliseconds at which your app can handle location updates. **@see** [android  docs](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest.html#getFastestInterval()).
 `option.activityType` | `String` | iOS | [AutomotiveNavigation, OtherNavigation, Fitness, Other] Presumably, this affects iOS GPS algorithm. **@see** [Apple docs](https://developer.apple.com/library/ios/documentation/CoreLocation/Reference/CLLocationManager_Class/CLLocationManager/CLLocationManager.html#//apple_ref/occ/instp/CLLocationManager/activityType) for more information
+`option.alwaysUseLocationService` | `Boolean` optional | iOS | Enable this to always use apple standard location service. This will make exiting stationary region more precise but will use more battery.
 
 Success callback will be called with one argument - location object, which tries to mimic w3c [Coordinates interface](http://dev.w3.org/geo/api/spec-source.html#coordinates_interface).
 

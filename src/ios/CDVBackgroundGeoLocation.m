@@ -22,6 +22,7 @@
     BOOL enabled;
     BOOL isUpdatingLocation;
     BOOL stopOnTerminate;
+    BOOL alwaysUseLocationService;
 
     UIBackgroundTaskIdentifier bgTask;
     NSDate *lastBgTaskAt;
@@ -77,6 +78,7 @@
     stationaryRegion = nil;
     isDebugging = NO;
     stopOnTerminate = NO;
+    alwaysUseLocationService = NO;
 
     maxStationaryLocationAttempts   = 4;
     maxSpeedAcquistionAttempts      = 3;
@@ -97,8 +99,8 @@
 - (void) configure:(CDVInvokedUrlCommand*)command
 {
     // Params.
-    //    0                    1               2                 3           4          5                  6                7               8
-    //[stationaryRadius, distanceFilter, locationTimeout, desiredAccuracy, debug, notificationTitle, notificationText, activityType, stopOnTerminate]
+    //    0                    1               2                 3           4          5                  6                7               8                   14
+    //[stationaryRadius, distanceFilter, locationTimeout, desiredAccuracy, debug, notificationTitle, notificationText, activityType, stopOnTerminate, alwaysUseLocationService]
 
     // UNUSED ANDROID VARS
     stationaryRadius    = [[command.arguments objectAtIndex: 0] intValue];
@@ -108,6 +110,7 @@
     isDebugging         = [[command.arguments objectAtIndex: 4] boolValue];
     activityType        = [self decodeActivityType:[command.arguments objectAtIndex:7]];
     stopOnTerminate     = [[command.arguments objectAtIndex: 8] boolValue];
+    alwaysUseLocationService = [[command.arguments objectAtIndex: 14] boolValue];
 
     self.syncCallbackId = command.callbackId;
 
@@ -241,6 +244,9 @@
     NSLog(@"- CDVBackgroundGeoLocation start (background? %d)", state);
 
     [locationManager startMonitoringSignificantLocationChanges];
+    if (alwaysUseLocationService) {
+        [self startUpdatingLocation];
+    }
     if (state == UIApplicationStateBackground) {
         [self setPace:isMoving];
     }
@@ -613,7 +619,9 @@
     stationaryRegion.notifyOnExit = YES;
     [locationManager startMonitoringForRegion:stationaryRegion];
 
-    [self stopUpdatingLocation];
+    if (!alwaysUseLocationService) {
+        [self stopUpdatingLocation];
+    }
     locationManager.distanceFilter = distanceFilter;
     locationManager.desiredAccuracy = desiredAccuracy;
 }
@@ -661,7 +669,6 @@
     if (locationError) {
         isMoving = NO;
         [self startMonitoringStationaryRegion:lastLocation];
-        [self stopUpdatingLocation];
     } else {
         [self setPace:NO];
     }
